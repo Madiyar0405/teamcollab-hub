@@ -1,15 +1,26 @@
 import { useTaskStore } from "@/store/useTaskStore";
 import { TaskCard } from "./TaskCard";
+import { DroppableColumn } from "./DroppableColumn";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, DragOverEvent } from "@dnd-kit/core";
+import { 
+  DndContext, 
+  DragEndEvent, 
+  DragOverlay, 
+  DragStartEvent, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  useDroppable,
+  DragOverEvent
+} from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 export const KanbanBoard = () => {
@@ -85,6 +96,7 @@ export const KanbanBoard = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Новое событие</DialogTitle>
+              <DialogDescription>Создайте новое событие для организации задач</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -113,6 +125,7 @@ export const KanbanBoard = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Новая колонка</DialogTitle>
+              <DialogDescription>Добавьте новую колонку в выбранное событие</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -180,18 +193,17 @@ export const KanbanBoard = () => {
                     const columnTasks = tasks.filter((task) => task.columnId === column.id);
 
                     return (
-                      <SortableContext
+                      <DroppableColumn
                         key={column.id}
                         id={column.id}
                         items={columnTasks.map((t) => t.id)}
-                        strategy={verticalListSortingStrategy}
                       >
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <Card className={`${column.color || "bg-card"} border-2`}>
+                          <Card className={`${column.color || "bg-card"} border-2 h-full`}>
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
                                 <CardTitle className="text-lg font-semibold">
@@ -219,7 +231,7 @@ export const KanbanBoard = () => {
                             </CardContent>
                           </Card>
                         </motion.div>
-                      </SortableContext>
+                      </DroppableColumn>
                     );
                   })}
                 </div>
