@@ -1,4 +1,4 @@
-import { User, Task } from "@/types";
+import { User, Task, Event, Column } from "@/types";
 
 // Mock пользователи
 export const mockUsers: User[] = [
@@ -59,13 +59,80 @@ export const mockUsers: User[] = [
   },
 ];
 
+// Mock события
+export const mockEvents: Event[] = [
+  {
+    id: "event-1",
+    title: "Q1 2024 - Разработка продукта",
+    description: "Основные задачи первого квартала",
+    createdAt: "2024-01-01T00:00:00Z",
+    order: 0,
+  },
+  {
+    id: "event-2",
+    title: "Q2 2024 - Маркетинг и запуск",
+    description: "Подготовка к запуску продукта",
+    createdAt: "2024-01-01T00:00:00Z",
+    order: 1,
+  },
+];
+
+// Mock колонки
+export const mockColumns: Column[] = [
+  // Колонки для первого события
+  {
+    id: "col-1",
+    title: "К выполнению",
+    eventId: "event-1",
+    order: 0,
+    color: "bg-info/10 border-info/30",
+  },
+  {
+    id: "col-2",
+    title: "В работе",
+    eventId: "event-1",
+    order: 1,
+    color: "bg-warning/10 border-warning/30",
+  },
+  {
+    id: "col-3",
+    title: "Завершено",
+    eventId: "event-1",
+    order: 2,
+    color: "bg-success/10 border-success/30",
+  },
+  // Колонки для второго события
+  {
+    id: "col-4",
+    title: "Планирование",
+    eventId: "event-2",
+    order: 0,
+    color: "bg-purple-500/10 border-purple-500/30",
+  },
+  {
+    id: "col-5",
+    title: "Выполнение",
+    eventId: "event-2",
+    order: 1,
+    color: "bg-blue-500/10 border-blue-500/30",
+  },
+  {
+    id: "col-6",
+    title: "Готово",
+    eventId: "event-2",
+    order: 2,
+    color: "bg-green-500/10 border-green-500/30",
+  },
+];
+
 // Mock задачи
 export const mockTasks: Task[] = [
   {
     id: "1",
     title: "Разработка новой страницы профиля",
     description: "Создать адаптивный дизайн страницы профиля пользователя с возможностью редактирования данных",
-    status: "in-progress",
+    eventId: "event-1",
+    columnId: "col-2",
     priority: "high",
     assignedTo: "2",
     createdBy: "1",
@@ -77,7 +144,8 @@ export const mockTasks: Task[] = [
     id: "2",
     title: "Оптимизация производительности",
     description: "Провести аудит и оптимизировать загрузку главной страницы",
-    status: "todo",
+    eventId: "event-1",
+    columnId: "col-1",
     priority: "high",
     assignedTo: "2",
     createdBy: "1",
@@ -89,7 +157,8 @@ export const mockTasks: Task[] = [
     id: "3",
     title: "Дизайн системы уведомлений",
     description: "Создать UI компоненты для системы уведомлений в реальном времени",
-    status: "in-progress",
+    eventId: "event-1",
+    columnId: "col-2",
     priority: "medium",
     assignedTo: "3",
     createdBy: "1",
@@ -101,7 +170,8 @@ export const mockTasks: Task[] = [
     id: "4",
     title: "API для управления задачами",
     description: "Разработать REST API endpoints для CRUD операций с задачами",
-    status: "done",
+    eventId: "event-1",
+    columnId: "col-3",
     priority: "high",
     assignedTo: "4",
     createdBy: "1",
@@ -113,7 +183,8 @@ export const mockTasks: Task[] = [
     id: "5",
     title: "Тестирование функционала drag & drop",
     description: "Написать end-to-end тесты для функционала перетаскивания задач",
-    status: "todo",
+    eventId: "event-1",
+    columnId: "col-1",
     priority: "medium",
     assignedTo: "5",
     createdBy: "1",
@@ -123,59 +194,27 @@ export const mockTasks: Task[] = [
   },
   {
     id: "6",
-    title: "Интеграция с WebSocket",
-    description: "Подключить WebSocket для получения обновлений в реальном времени",
-    status: "todo",
+    title: "Маркетинговая стратегия",
+    description: "Разработать план маркетинговых активностей",
+    eventId: "event-2",
+    columnId: "col-4",
     priority: "high",
-    assignedTo: "4",
+    assignedTo: "1",
     createdBy: "1",
     createdAt: "2024-01-13T09:00:00Z",
     updatedAt: "2024-01-13T09:00:00Z",
-    dueDate: "2024-01-28",
+    dueDate: "2024-02-28",
   },
   {
     id: "7",
-    title: "Рефакторинг компонентов",
-    description: "Улучшить переиспользуемость компонентов и разделить логику",
-    status: "in-progress",
-    priority: "low",
-    assignedTo: "2",
-    createdBy: "1",
-    createdAt: "2024-01-08T14:00:00Z",
-    updatedAt: "2024-01-12T11:00:00Z",
-  },
-  {
-    id: "8",
-    title: "Настройка CI/CD pipeline",
-    description: "Создать автоматический процесс деплоя приложения",
-    status: "done",
-    priority: "medium",
-    assignedTo: "4",
-    createdBy: "1",
-    createdAt: "2024-01-03T10:00:00Z",
-    updatedAt: "2024-01-08T15:00:00Z",
-  },
-  {
-    id: "9",
-    title: "Дизайн мобильной версии",
-    description: "Адаптировать интерфейс для мобильных устройств",
-    status: "todo",
+    title: "Контент для социальных сетей",
+    description: "Создать контент-план на квартал",
+    eventId: "event-2",
+    columnId: "col-5",
     priority: "medium",
     assignedTo: "3",
     createdBy: "1",
-    createdAt: "2024-01-14T11:00:00Z",
-    updatedAt: "2024-01-14T11:00:00Z",
-    dueDate: "2024-01-30",
-  },
-  {
-    id: "10",
-    title: "Документация API",
-    description: "Написать подробную документацию для всех API endpoints",
-    status: "in-progress",
-    priority: "low",
-    assignedTo: "4",
-    createdBy: "1",
-    createdAt: "2024-01-11T13:00:00Z",
-    updatedAt: "2024-01-13T10:00:00Z",
+    createdAt: "2024-01-08T14:00:00Z",
+    updatedAt: "2024-01-12T11:00:00Z",
   },
 ];

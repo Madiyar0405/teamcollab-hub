@@ -14,17 +14,36 @@ export interface User {
   joinedDate: string;
 }
 
+export interface Column {
+  id: string;
+  title: string;
+  eventId: string;
+  order: number;
+  color?: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  order: number;
+}
+
 export interface Task {
   id: string;
   title: string;
   description: string;
-  status: TaskStatus;
+  eventId: string;
+  columnId: string;
   priority: "low" | "medium" | "high";
   assignedTo: string; // User ID
   createdBy: string; // User ID
   createdAt: string;
   updatedAt: string;
   dueDate?: string;
+  // Для обратной совместимости
+  status?: TaskStatus;
 }
 
 export interface Notification {

@@ -27,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthStore } from "@/store/useAuthStore";
-import { TaskStatus } from "@/types";
 
 export default function Dashboard() {
   const { tasks, addTask } = useTaskStore();
@@ -40,15 +39,19 @@ export default function Dashboard() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high">("medium");
   const [newTaskAssignee, setNewTaskAssignee] = useState("");
-  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>("todo");
+  const [newTaskEventId, setNewTaskEventId] = useState("");
+  const [newTaskColumnId, setNewTaskColumnId] = useState("");
+
+  const { events, columns } = useTaskStore();
 
   const handleCreateTask = () => {
-    if (!newTaskTitle.trim() || !newTaskAssignee) return;
+    if (!newTaskTitle.trim() || !newTaskAssignee || !newTaskEventId || !newTaskColumnId) return;
 
     addTask({
       title: newTaskTitle,
       description: newTaskDescription,
-      status: newTaskStatus,
+      eventId: newTaskEventId,
+      columnId: newTaskColumnId,
       priority: newTaskPriority,
       assignedTo: newTaskAssignee,
       createdBy: user?.id || "1",
@@ -59,14 +62,19 @@ export default function Dashboard() {
     setNewTaskDescription("");
     setNewTaskPriority("medium");
     setNewTaskAssignee("");
-    setNewTaskStatus("todo");
+    setNewTaskEventId("");
+    setNewTaskColumnId("");
     setIsDialogOpen(false);
   };
 
-  const todoCount = tasks.filter((t) => t.status === "todo").length;
-  const inProgressCount = tasks.filter((t) => t.status === "in-progress").length;
-  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const totalTasks = tasks.length;
   const totalEmployees = mockUsers.length;
+  const totalEvents = events.length;
+  const totalColumns = columns.length;
+
+  const availableColumns = newTaskEventId 
+    ? columns.filter(col => col.eventId === newTaskEventId)
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,20 +100,20 @@ export default function Dashboard() {
         >
           <Card className="border-2 border-info/30 bg-info/5">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-info">{todoCount}</div>
-              <p className="text-sm text-muted-foreground">К выполнению</p>
+              <div className="text-2xl font-bold text-info">{totalTasks}</div>
+              <p className="text-sm text-muted-foreground">Всего задач</p>
             </CardContent>
           </Card>
           <Card className="border-2 border-warning/30 bg-warning/5">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-warning">{inProgressCount}</div>
-              <p className="text-sm text-muted-foreground">В работе</p>
+              <div className="text-2xl font-bold text-warning">{totalEvents}</div>
+              <p className="text-sm text-muted-foreground">События</p>
             </CardContent>
           </Card>
           <Card className="border-2 border-success/30 bg-success/5">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-success">{doneCount}</div>
-              <p className="text-sm text-muted-foreground">Завершено</p>
+              <div className="text-2xl font-bold text-success">{totalColumns}</div>
+              <p className="text-sm text-muted-foreground">Колонок</p>
             </CardContent>
           </Card>
           <Card className="border-2 border-primary/30 bg-primary/5">
@@ -170,33 +178,52 @@ export default function Dashboard() {
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="task-priority">Приоритет</Label>
-                    <Select value={newTaskPriority} onValueChange={(value: any) => setNewTaskPriority(value)}>
-                      <SelectTrigger id="task-priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Низкий</SelectItem>
-                        <SelectItem value="medium">Средний</SelectItem>
-                        <SelectItem value="high">Высокий</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="task-status">Статус</Label>
-                    <Select value={newTaskStatus} onValueChange={(value: any) => setNewTaskStatus(value)}>
-                      <SelectTrigger id="task-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todo">К выполнению</SelectItem>
-                        <SelectItem value="in-progress">В работе</SelectItem>
-                        <SelectItem value="done">Завершено</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="task-priority">Приоритет</Label>
+                  <Select value={newTaskPriority} onValueChange={(value: any) => setNewTaskPriority(value)}>
+                    <SelectTrigger id="task-priority">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Низкий</SelectItem>
+                      <SelectItem value="medium">Средний</SelectItem>
+                      <SelectItem value="high">Высокий</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="task-event">Событие</Label>
+                  <Select value={newTaskEventId} onValueChange={setNewTaskEventId}>
+                    <SelectTrigger id="task-event">
+                      <SelectValue placeholder="Выберите событие" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {events.map((event) => (
+                        <SelectItem key={event.id} value={event.id}>
+                          {event.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="task-column">Колонка</Label>
+                  <Select 
+                    value={newTaskColumnId} 
+                    onValueChange={setNewTaskColumnId}
+                    disabled={!newTaskEventId}
+                  >
+                    <SelectTrigger id="task-column">
+                      <SelectValue placeholder="Выберите колонку" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableColumns.map((col) => (
+                        <SelectItem key={col.id} value={col.id}>
+                          {col.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="task-assignee">Исполнитель</Label>
