@@ -22,6 +22,13 @@ import { motion } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const KanbanBoard = () => {
   const { tasks, events, columns, moveTask, addEvent, addColumn, deleteColumn } = useTaskStore();
@@ -29,6 +36,7 @@ export const KanbanBoard = () => {
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [selectedEventId, setSelectedEventId] = useState("");
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string>("all");
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false);
 
@@ -83,82 +91,105 @@ export const KanbanBoard = () => {
 
   const activeTask = tasks.find((task) => task.id === activeId);
 
+  // Фильтруем события на основе выбора
+  const filteredEvents = selectedEventFilter === "all" 
+    ? events 
+    : events.filter(event => event.id === selectedEventFilter);
+
   return (
     <div className="space-y-8">
-      <div className="flex gap-4">
-        <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить событие
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Новое событие</DialogTitle>
-              <DialogDescription>Создайте новое событие для организации задач</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="event-title">Название события</Label>
-                <Input
-                  id="event-title"
-                  value={newEventTitle}
-                  onChange={(e) => setNewEventTitle(e.target.value)}
-                  placeholder="Q3 2024 - Развитие"
-                />
-              </div>
-              <Button onClick={handleAddEvent} className="w-full">
-                Создать
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="w-full sm:w-64">
+          <Select value={selectedEventFilter} onValueChange={setSelectedEventFilter}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Выберите событие" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все события</SelectItem>
+              {events.map((event) => (
+                <SelectItem key={event.id} value={event.id}>
+                  {event.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Dialog open={isColumnDialogOpen} onOpenChange={setIsColumnDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить колонку
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Новая колонка</DialogTitle>
-              <DialogDescription>Добавьте новую колонку в выбранное событие</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="event-select">Выберите событие</Label>
-                <select
-                  id="event-select"
-                  className="w-full p-2 border rounded-md bg-background"
-                  value={selectedEventId}
-                  onChange={(e) => setSelectedEventId(e.target.value)}
-                >
-                  <option value="">Выберите событие</option>
-                  {events.map((event) => (
-                    <option key={event.id} value={event.id}>
-                      {event.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="column-title">Название колонки</Label>
-                <Input
-                  id="column-title"
-                  value={newColumnTitle}
-                  onChange={(e) => setNewColumnTitle(e.target.value)}
-                  placeholder="В процессе"
-                />
-              </div>
-              <Button onClick={handleAddColumn} className="w-full" disabled={!selectedEventId}>
-                Создать
+        <div className="flex gap-4 w-full sm:w-auto">
+          <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить событие
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Новое событие</DialogTitle>
+                <DialogDescription>Создайте новое событие для организации задач</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="event-title">Название события</Label>
+                  <Input
+                    id="event-title"
+                    value={newEventTitle}
+                    onChange={(e) => setNewEventTitle(e.target.value)}
+                    placeholder="Q3 2024 - Развитие"
+                  />
+                </div>
+                <Button onClick={handleAddEvent} className="w-full">
+                  Создать
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isColumnDialogOpen} onOpenChange={setIsColumnDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить колонку
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Новая колонка</DialogTitle>
+                <DialogDescription>Добавьте новую колонку в выбранное событие</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="event-select">Выберите событие</Label>
+                  <select
+                    id="event-select"
+                    className="w-full p-2 border rounded-md bg-background"
+                    value={selectedEventId}
+                    onChange={(e) => setSelectedEventId(e.target.value)}
+                  >
+                    <option value="">Выберите событие</option>
+                    {events.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="column-title">Название колонки</Label>
+                  <Input
+                    id="column-title"
+                    value={newColumnTitle}
+                    onChange={(e) => setNewColumnTitle(e.target.value)}
+                    placeholder="В процессе"
+                  />
+                </div>
+                <Button onClick={handleAddColumn} className="w-full" disabled={!selectedEventId}>
+                  Создать
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <DndContext
@@ -167,7 +198,7 @@ export const KanbanBoard = () => {
         onDragEnd={handleDragEnd}
       >
         <div className="space-y-12">
-          {events.sort((a, b) => a.order - b.order).map((event) => {
+          {filteredEvents.sort((a, b) => a.order - b.order).map((event) => {
             const eventColumns = columns
               .filter((col) => col.eventId === event.id)
               .sort((a, b) => a.order - b.order);
