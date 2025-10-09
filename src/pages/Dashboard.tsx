@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { KanbanBoard } from "@/components/KanbanBoard";
+import { TaskSearch } from "@/components/TaskSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter } from "lucide-react";
@@ -131,14 +132,8 @@ export default function Dashboard() {
           transition={{ delay: 0.2 }}
           className="flex flex-col sm:flex-row gap-4 mb-6"
         >
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Поиск задач..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex-1">
+            <TaskSearch />
           </div>
           <Button variant="outline">
             <Filter className="w-4 h-4 mr-2" />

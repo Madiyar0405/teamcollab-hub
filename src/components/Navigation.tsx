@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, User, Bell, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, User, Bell, LogOut, Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -14,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider";
 
 export const Navigation = () => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { notifications } = useTaskStore();
+  const { theme, setTheme } = useTheme();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -71,6 +73,19 @@ export const Navigation = () => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-3">
+            {/* Theme Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </Button>
+
             {/* Notifications */}
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="relative">

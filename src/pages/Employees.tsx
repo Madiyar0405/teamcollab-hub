@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { motion } from "framer-motion";
 import { mockUsers } from "@/data/mockData";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Employees() {
+  const navigate = useNavigate();
   const { tasks } = useTaskStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "tasks">("name");
@@ -193,7 +195,11 @@ export default function Employees() {
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate(`/user/${employee.id}`)}
+                  >
                     Посмотреть профиль
                   </Button>
                 </CardContent>
