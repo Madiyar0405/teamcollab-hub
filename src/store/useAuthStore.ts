@@ -1,15 +1,14 @@
 import { create } from "zustand";
 import { User } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { authService } from "@/api/services/authService";
 
 interface AuthState {
   user: User | null;
-  session: Session | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
+  setToken: (token: string | null) => void;
   setIsAuthenticated: (value: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, department: string) => Promise<boolean>;
@@ -19,47 +18,40 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  session: null,
+  token: null,
   isAuthenticated: false,
   isLoading: true,
 
   setUser: (user) => set({ user }),
-  setSession: (session) => set({ session }),
+  setToken: (token) => set({ token }),
   setIsAuthenticated: (value) => set({ isAuthenticated: value }),
 
   initialize: async () => {
     try {
       set({ isLoading: true });
       
-      // Проверяем текущую сессию
-      const { data: { session } } = await supabase.auth.getSession();
+      // Проверяем сохраненный токен
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
       
-      if (session?.user) {
-        // Загружаем профиль пользователя
-        setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            const user: User = {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-              role: 'user',
-              department: profile.department || 'Команда',
-              activeTasks: 0,
-              completedTasks: 0,
-              joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
-            };
-            set({ user, session, isAuthenticated: true, isLoading: false });
-          }
-        }, 0);
+      if (savedToken && savedUser) {
+        try {
+          // Проверяем валидность токена, запросив текущего пользователя
+          const user = await authService.getCurrentUser();
+          set({ 
+            user, 
+            token: savedToken, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
+        } catch (error) {
+          // Токен невалиден
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+        }
       } else {
-        set({ user: null, session: null, isAuthenticated: false, isLoading: false });
+        set({ user: null, token: null, isAuthenticated: false, isLoading: false });
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
@@ -69,37 +61,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          const user: User = {
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-            role: 'user',
-            department: profile.department || 'Команда',
-            activeTasks: 0,
-            completedTasks: 0,
-            joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
-          };
-          set({ user, session: data.session, isAuthenticated: true });
-          return true;
-        }
-      }
-      return false;
+      const { token, user } = await authService.login({ email, password });
+      
+      // Сохраняем токен и пользователя
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      set({ user, token, isAuthenticated: true });
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -108,45 +77,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   register: async (name: string, email: string, password: string, department: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            name,
-            department,
-          },
-        },
+      const { token, user } = await authService.register({ 
+        name, 
+        email, 
+        password, 
+        department 
       });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Профиль создается автоматически через триггер
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          const user: User = {
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-            role: 'user',
-            department: profile.department || 'Команда',
-            activeTasks: 0,
-            completedTasks: 0,
-            joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
-          };
-          set({ user, session: data.session, isAuthenticated: true });
-          return true;
-        }
-      }
-      return false;
+      
+      // Сохраняем токен и пользователя
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      set({ user, token, isAuthenticated: true });
+      return true;
     } catch (error) {
       console.error('Registration error:', error);
       return false;
@@ -155,10 +98,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      await supabase.auth.signOut();
-      set({ user: null, session: null, isAuthenticated: false });
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      set({ user: null, token: null, isAuthenticated: false });
     }
   },
 }));

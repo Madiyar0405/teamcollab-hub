@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { userService } from '@/api/services/userService';
 import { User } from '@/types';
+import { toast } from 'sonner';
 
 export function useProfiles() {
   const [profiles, setProfiles] = useState<User[]>([]);
@@ -12,34 +13,35 @@ export function useProfiles() {
 
   const fetchProfiles = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-
-      const users: User[] = (data || []).map(profile => ({
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-        role: 'user',
-        department: profile.department || 'Команда',
-        activeTasks: 0,
-        completedTasks: 0,
-        joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
-      }));
-
-      setProfiles(users);
+      const data = await userService.getAll();
+      setProfiles(data);
     } catch (error) {
       console.error('Error fetching profiles:', error);
+      toast.error('Ошибка загрузки пользователей');
     } finally {
       setLoading(false);
     }
   };
 
-  return { profiles, loading, refetch: fetchProfiles };
+  const updateProfile = async (id: string, updates: Partial<User>) => {
+    try {
+      const updated = await userService.update(id, updates);
+      setProfiles(prev => prev.map(p => p.id === id ? updated : p));
+      toast.success('Профиль обновлен');
+      return updated;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Ошибка обновления профиля');
+      return null;
+    }
+  };
+
+  return {
+    profiles,
+    loading,
+    refetch: fetchProfiles,
+    updateProfile,
+  };
 }
 
 export function useProfile(userId: string) {
@@ -54,34 +56,19 @@ export function useProfile(userId: string) {
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        const user: User = {
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
-          role: 'user',
-          department: data.department || 'Команда',
-          activeTasks: 0,
-          completedTasks: 0,
-          joinedDate: new Date(data.joined_date).toISOString().split('T')[0],
-        };
-        setProfile(user);
-      }
+      const data = await userService.getById(userId);
+      setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast.error('Ошибка загрузки профиля');
     } finally {
       setLoading(false);
     }
   };
 
-  return { profile, loading, refetch: fetchProfile };
+  return {
+    profile,
+    loading,
+    refetch: fetchProfile,
+  };
 }
