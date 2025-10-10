@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { mockUsers } from "@/data/mockData";
+import { useProfiles } from "@/hooks/useProfiles";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useChatStore } from "@/store/useChatStore";
+import { useChats } from "@/hooks/useChats";
 import { toast } from "sonner";
 
 interface CreateGroupChatDialogProps {
@@ -31,9 +31,10 @@ export const CreateGroupChatDialog = ({
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const { user } = useAuthStore();
-  const { createGroupChat } = useChatStore();
+  const { profiles } = useProfiles();
+  const { createGroupChat } = useChats(user?.id || '');
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!groupName.trim()) {
       toast.error("Введите название группы");
       return;
@@ -44,18 +45,14 @@ export const CreateGroupChatDialog = ({
       return;
     }
 
-    // Include current user in participants
-    const participants = user ? [...selectedUsers, user.id] : selectedUsers;
-    createGroupChat(groupName.trim(), participants);
-    
-    const chatId = `group-${Date.now()}`;
-    toast.success("Групповой чат создан");
-    
-    // Reset form
-    setGroupName("");
-    setSelectedUsers([]);
-    
-    onCreated(chatId);
+    if (!user) return;
+
+    const chatId = await createGroupChat(groupName, selectedUsers);
+    if (chatId) {
+      onCreated(chatId);
+      setGroupName("");
+      setSelectedUsers([]);
+    }
   };
 
   const toggleUser = (userId: string) => {
@@ -88,7 +85,7 @@ export const CreateGroupChatDialog = ({
             <Label>Участники ({selectedUsers.length})</Label>
             <ScrollArea className="h-[300px] rounded-md border p-4">
               <div className="space-y-3">
-                {mockUsers
+                {profiles
                   .filter((u) => u.id !== user?.id)
                   .map((u) => (
                     <div

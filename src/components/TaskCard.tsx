@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, MoreVertical, Trash2, User, Clock, FileText } from "lucide-react";
-import { mockUsers } from "@/data/mockData";
 import { useState } from "react";
 import {
   Dialog,
@@ -14,7 +13,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { useTaskStore } from "@/store/useTaskStore";
+import { useTasks } from "@/hooks/useTasks";
+import { useEvents } from "@/hooks/useEvents";
+import { useProfiles } from "@/hooks/useProfiles";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,9 +43,11 @@ const priorityLabels = {
 };
 
 export const TaskCard = ({ task }: TaskCardProps) => {
-  const { deleteTask, events, columns } = useTaskStore();
-  const assignedUser = mockUsers.find((u) => u.id === task.assignedTo);
-  const createdByUser = mockUsers.find((u) => u.id === task.createdBy);
+  const { deleteTask } = useTasks();
+  const { events, columns } = useEvents();
+  const { profiles } = useProfiles();
+  const assignedUser = profiles.find((u) => u.id === task.assignedTo);
+  const createdByUser = profiles.find((u) => u.id === task.createdBy);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const taskEvent = events.find((e) => e.id === task.eventId);

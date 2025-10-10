@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Reply, Trash2, Plus, Users, ArrowLeft } from "lucide-react";
-import { useChatStore } from "@/store/useChatStore";
+import { useChats, useChatMessages } from "@/hooks/useChats";
 import { useAuthStore } from "@/store/useAuthStore";
-import { mockUsers } from "@/data/mockData";
+import { useProfiles } from "@/hooks/useProfiles";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,21 +24,14 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [showChatList, setShowChatList] = useState(true);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  
-  const { 
-    chats, 
-    activeChat, 
-    setActiveChat, 
-    addMessage, 
-    deleteMessage, 
-    getMessagesForChat,
-    createPersonalChat 
-  } = useChatStore();
+  const [activeChat, setActiveChat] = useState<string | null>(null);
   
   const { user } = useAuthStore();
+  const { chats, createPersonalChat, createGroupChat } = useChats(user?.id || '');
+  const { messages, sendMessage, deleteMessage } = useChatMessages(activeChat);
+  const { profiles } = useProfiles();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const messages = activeChat ? getMessagesForChat(activeChat) : [];
   const currentChat = chats.find((c) => c.id === activeChat);
 
   useEffect(() => {
@@ -47,9 +40,10 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
     }
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!message.trim() || !user || !activeChat) return;
-    addMessage(activeChat, user.id, message.trim(), replyTo || undefined);
+    
+    await sendMessage(message.trim(), replyTo || undefined);
     setMessage("");
     setReplyTo(null);
   };
@@ -71,15 +65,17 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
     
     // For personal chat, show the other user's name
     const otherUserId = chat.participants.find((id) => id !== user?.id);
-    const otherUser = mockUsers.find((u) => u.id === otherUserId);
+    const otherUser = profiles.find((u) => u.id === otherUserId);
     return otherUser?.name || "Личный чат";
   };
 
-  const handleStartPersonalChat = (userId: string) => {
+  const handleStartPersonalChat = async (userId: string) => {
     if (!user) return;
-    const chatId = createPersonalChat(userId, user.id);
-    setActiveChat(chatId);
-    setShowChatList(false);
+    const chatId = await createPersonalChat(userId);
+    if (chatId) {
+      setActiveChat(chatId);
+      setShowChatList(false);
+    }
   };
 
   const handleSelectChat = (chatId: string) => {
@@ -89,7 +85,7 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
 
   const getChatParticipants = (chat: typeof currentChat) => {
     if (!chat) return [];
-    return mockUsers.filter((u) => chat.participants.includes(u.id));
+    return profiles.filter((u) => chat.participants.includes(u.id));
   };
 
   return (
@@ -125,7 +121,7 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
                         Личные чаты
                       </h3>
                       <div className="space-y-2">
-                        {mockUsers
+                        {profiles
                           .filter((u) => u.id !== user?.id)
                           .map((u) => (
                             <Button
@@ -219,11 +215,11 @@ export const Chat = ({ open, onOpenChange }: ChatProps) => {
                 <ScrollArea className="flex-1 px-6" ref={scrollRef}>
                   <div className="space-y-4 py-4">
                     {messages.map((msg) => {
-                      const sender = mockUsers.find((u) => u.id === msg.userId);
+                      const sender = profiles.find((u) => u.id === msg.userId);
                       const isOwn = msg.userId === user?.id;
                       const replyMsg = msg.replyTo ? getReplyMessage(msg.replyTo) : null;
                       const replySender = replyMsg
-                        ? mockUsers.find((u) => u.id === replyMsg.userId)
+                        ? profiles.find((u) => u.id === replyMsg.userId)
                         : null;
 
                       return (

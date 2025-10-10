@@ -1,4 +1,5 @@
-import { useTaskStore } from "@/store/useTaskStore";
+import { useTasks } from "@/hooks/useTasks";
+import { useEvents } from "@/hooks/useEvents";
 import { TaskCard } from "./TaskCard";
 import { DroppableColumn } from "./DroppableColumn";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,8 @@ import {
 } from "@/components/ui/select";
 
 export const KanbanBoard = () => {
-  const { tasks, events, columns, moveTask, addEvent, addColumn, deleteColumn } = useTaskStore();
+  const { tasks, moveTask } = useTasks();
+  const { events, columns, addEvent, addColumn } = useEvents();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newColumnTitle, setNewColumnTitle] = useState("");
@@ -69,21 +71,17 @@ export const KanbanBoard = () => {
     setActiveId(null);
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (newEventTitle.trim()) {
-      addEvent({ title: newEventTitle, description: "" });
+      await addEvent(newEventTitle, "");
       setNewEventTitle("");
       setIsEventDialogOpen(false);
     }
   };
 
-  const handleAddColumn = () => {
+  const handleAddColumn = async () => {
     if (newColumnTitle.trim() && selectedEventId) {
-      addColumn({
-        title: newColumnTitle,
-        eventId: selectedEventId,
-        color: "bg-slate-100/50 border-slate-300/30",
-      });
+      await addColumn(selectedEventId, newColumnTitle, "bg-slate-100/50 border-slate-300/30");
       setNewColumnTitle("");
       setIsColumnDialogOpen(false);
     }
@@ -244,14 +242,6 @@ export const KanbanBoard = () => {
                                   <Badge variant="secondary">
                                     {columnTasks.length}
                                   </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => deleteColumn(column.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
                                 </div>
                               </div>
                             </CardHeader>

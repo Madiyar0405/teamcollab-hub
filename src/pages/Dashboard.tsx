@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTaskStore } from "@/store/useTaskStore";
-import { mockUsers } from "@/data/mockData";
+import { useTasks } from "@/hooks/useTasks";
+import { useEvents } from "@/hooks/useEvents";
+import { useProfiles } from "@/hooks/useProfiles";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -30,7 +31,9 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Dashboard() {
-  const { tasks, addTask } = useTaskStore();
+  const { tasks, addTask } = useTasks();
+  const { events, columns } = useEvents();
+  const { profiles } = useProfiles();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,19 +46,17 @@ export default function Dashboard() {
   const [newTaskEventId, setNewTaskEventId] = useState("");
   const [newTaskColumnId, setNewTaskColumnId] = useState("");
 
-  const { events, columns } = useTaskStore();
+  const handleCreateTask = async () => {
+    if (!newTaskTitle.trim() || !newTaskAssignee || !newTaskEventId || !newTaskColumnId || !user) return;
 
-  const handleCreateTask = () => {
-    if (!newTaskTitle.trim() || !newTaskAssignee || !newTaskEventId || !newTaskColumnId) return;
-
-    addTask({
+    await addTask({
       title: newTaskTitle,
       description: newTaskDescription,
       eventId: newTaskEventId,
       columnId: newTaskColumnId,
       priority: newTaskPriority,
       assignedTo: newTaskAssignee,
-      createdBy: user?.id || "1",
+      createdBy: user.id,
     });
 
     // Reset form
@@ -69,7 +70,7 @@ export default function Dashboard() {
   };
 
   const totalTasks = tasks.length;
-  const totalEmployees = mockUsers.length;
+  const totalEmployees = profiles.length;
   const totalEvents = events.length;
   const totalColumns = columns.length;
 
@@ -227,7 +228,7 @@ export default function Dashboard() {
                       <SelectValue placeholder="Выберите исполнителя" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockUsers.map((u) => (
+                      {profiles.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
                           {u.name}
                         </SelectItem>

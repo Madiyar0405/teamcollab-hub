@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { motion } from "framer-motion";
-import { useTaskStore } from "@/store/useTaskStore";
-import { mockUsers } from "@/data/mockData";
+import { useTasks } from "@/hooks/useTasks";
+import { useProfile } from "@/hooks/useProfiles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,19 @@ import { Separator } from "@/components/ui/separator";
 export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { tasks } = useTaskStore();
+  const { tasks } = useTasks();
+  const { profile: user, loading } = useProfile(userId || '');
   
-  const user = mockUsers.find(u => u.id === userId);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">Загрузка...</div>
+        </main>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -32,8 +42,11 @@ export default function UserProfile() {
   }
 
   const userTasks = tasks.filter((t) => t.assignedTo === user.id);
-  const activeTasks = userTasks.filter((t) => t.status !== "done");
-  const completedTasks = userTasks.filter((t) => t.status === "done");
+  const activeTasks = userTasks.filter((t) => {
+    // Задачи в колонках с именем "Завершено" или "Готово" считаются выполненными
+    return t.columnId !== 'done';
+  });
+  const completedTasks = userTasks.filter((t) => t.columnId === 'done');
 
   const recentTasks = userTasks
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())

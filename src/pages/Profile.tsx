@@ -1,7 +1,7 @@
 import { Navigation } from "@/components/Navigation";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useTaskStore } from "@/store/useTaskStore";
+import { useTasks } from "@/hooks/useTasks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +11,13 @@ import { Separator } from "@/components/ui/separator";
 
 export default function Profile() {
   const { user } = useAuthStore();
-  const { tasks } = useTaskStore();
+  const { tasks } = useTasks();
 
   if (!user) return null;
 
   const userTasks = tasks.filter((t) => t.assignedTo === user.id);
-  const activeTasks = userTasks.filter((t) => t.status !== "done");
-  const completedTasks = userTasks.filter((t) => t.status === "done");
+  const activeTasks = userTasks.filter((t) => t.columnId !== 'done');
+  const completedTasks = userTasks.filter((t) => t.columnId === 'done');
 
   const recentTasks = userTasks
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())

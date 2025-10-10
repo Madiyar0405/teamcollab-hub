@@ -3,7 +3,7 @@ import { LayoutDashboard, Users, User, Bell, LogOut, Moon, Sun, MessageSquare } 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useTaskStore } from "@/store/useTaskStore";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -21,11 +21,8 @@ import { useState } from "react";
 export const Navigation = () => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
-  const { notifications } = useTaskStore();
   const { theme, setTheme } = useTheme();
   const [chatOpen, setChatOpen] = useState(false);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const navItems = [
     { path: "/dashboard", icon: LayoutDashboard, label: "Дашборд" },
@@ -98,20 +95,6 @@ export const Navigation = () => {
               <MessageSquare className="w-5 h-5" />
             </Button>
 
-            {/* Notifications */}
-            <Link to="/notifications">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {unreadCount}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
 
             {/* User Dropdown */}
             <DropdownMenu>

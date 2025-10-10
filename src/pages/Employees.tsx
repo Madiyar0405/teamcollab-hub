@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { motion } from "framer-motion";
-import { mockUsers } from "@/data/mockData";
-import { useTaskStore } from "@/store/useTaskStore";
+import { useProfiles } from "@/hooks/useProfiles";
+import { useTasks } from "@/hooks/useTasks";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,17 +20,23 @@ import {
 
 export default function Employees() {
   const navigate = useNavigate();
-  const { tasks } = useTaskStore();
+  const { profiles } = useProfiles();
+  const { tasks } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "tasks">("name");
 
   // Подсчет активных задач для каждого сотрудника
-  const employeesWithTasks = mockUsers.map((user) => ({
-    ...user,
-    activeTasksCount: tasks.filter(
-      (t) => t.assignedTo === user.id && t.status !== "done"
-    ).length,
-  }));
+  const employeesWithTasks = profiles.map((user) => {
+    const userTasks = tasks.filter(t => t.assignedTo === user.id);
+    const activeTasks = userTasks.filter(t => t.columnId !== 'done').length;
+    const completed = userTasks.filter(t => t.columnId === 'done').length;
+    
+    return {
+      ...user,
+      activeTasksCount: activeTasks,
+      completedTasks: completed,
+    };
+  });
 
   // Фильтрация и сортировка
   const filteredEmployees = employeesWithTasks
@@ -74,7 +80,7 @@ export default function Employees() {
           <Card className="border-2 border-primary/30 bg-primary/5">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-primary">
-                {mockUsers.length}
+                {profiles.length}
               </div>
               <p className="text-sm text-muted-foreground">Всего сотрудников</p>
             </CardContent>
@@ -82,7 +88,7 @@ export default function Employees() {
           <Card className="border-2 border-warning/30 bg-warning/5">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-warning">
-                {tasks.filter((t) => t.status !== "done").length}
+                {tasks.length}
               </div>
               <p className="text-sm text-muted-foreground">Активных задач</p>
             </CardContent>
@@ -90,10 +96,7 @@ export default function Employees() {
           <Card className="border-2 border-success/30 bg-success/5">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-success">
-                {(
-                  tasks.filter((t) => t.status !== "done").length /
-                  mockUsers.length
-                ).toFixed(1)}
+                {profiles.length > 0 ? (tasks.length / profiles.length).toFixed(1) : '0'}
               </div>
               <p className="text-sm text-muted-foreground">
                 Средняя загрузка

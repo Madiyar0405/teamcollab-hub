@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTaskStore } from "@/store/useTaskStore";
+import { useTasks } from "@/hooks/useTasks";
 import { Task } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ interface TaskSearchProps {
 export const TaskSearch = ({ onTaskSelect }: TaskSearchProps) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const { tasks } = useTaskStore();
+  const { tasks } = useTasks();
 
   const searchResults = query.trim()
     ? tasks
