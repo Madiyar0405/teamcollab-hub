@@ -29,38 +29,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
+      set({ isLoading: true });
+      
       // Проверяем текущую сессию
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
         // Загружаем профиль пользователя
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          const user: User = {
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
-            role: 'user', // Роль загружается отдельно из user_roles
-            department: profile.department || 'Команда',
-            activeTasks: 0,
-            completedTasks: 0,
-            joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
-          };
-          set({ user, session, isAuthenticated: true, isLoading: false });
-        }
-      } else {
-        set({ user: null, session: null, isAuthenticated: false, isLoading: false });
-      }
-
-      // Слушаем изменения авторизации
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
+        setTimeout(async () => {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -79,12 +55,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               completedTasks: 0,
               joinedDate: new Date(profile.joined_date).toISOString().split('T')[0],
             };
-            set({ user, session, isAuthenticated: true });
+            set({ user, session, isAuthenticated: true, isLoading: false });
           }
-        } else if (event === 'SIGNED_OUT') {
-          set({ user: null, session: null, isAuthenticated: false });
-        }
-      });
+        }, 0);
+      } else {
+        set({ user: null, session: null, isAuthenticated: false, isLoading: false });
+      }
     } catch (error) {
       console.error('Error initializing auth:', error);
       set({ isLoading: false });
