@@ -57,8 +57,19 @@ export interface Notification {
 
 export interface ChatMessage {
   id: string;
+  chatId: string;
   userId: string;
   message: string;
   timestamp: string;
   replyTo?: string;
+}
+
+export interface Chat {
+  id: string;
+  name?: string;
+  type: "personal" | "group";
+  participants: string[]; // User IDs
+  createdAt: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
