@@ -54,3 +54,11 @@ export interface Notification {
   timestamp: string;
   read: boolean;
 }
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  message: string;
+  timestamp: string;
+  replyTo?: string;
+}

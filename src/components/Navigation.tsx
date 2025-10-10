@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, User, Bell, LogOut, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, Users, User, Bell, LogOut, Moon, Sun, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -15,12 +15,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
+import { Chat } from "@/components/Chat";
+import { useState } from "react";
 
 export const Navigation = () => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { notifications } = useTaskStore();
   const { theme, setTheme } = useTheme();
+  const [chatOpen, setChatOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -86,6 +89,15 @@ export const Navigation = () => {
               )}
             </Button>
 
+            {/* Chat */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setChatOpen(true)}
+            >
+              <MessageSquare className="w-5 h-5" />
+            </Button>
+
             {/* Notifications */}
             <Link to="/notifications">
               <Button variant="ghost" size="icon" className="relative">
@@ -135,6 +147,8 @@ export const Navigation = () => {
           </div>
         </div>
       </div>
+
+      <Chat open={chatOpen} onOpenChange={setChatOpen} />
     </nav>
   );
 };
