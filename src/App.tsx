@@ -23,21 +23,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const { initialize } = useAuthStore();
 
-  // Проверка сохраненной сессии при загрузке
+  // Инициализация аутентификации
   useEffect(() => {
-    const savedUser = localStorage.getItem("auth_user");
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        setUser(user);
-        setIsAuthenticated(true);
-      } catch (error) {
-        localStorage.removeItem("auth_user");
-      }
-    }
-  }, []);
+    initialize();
+  }, [initialize]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -91,3 +82,4 @@ const App = () => {
 };
 
 export default App;
+

@@ -64,17 +64,6 @@ export default function Auth() {
   };
 
   // Демо-кнопка для быстрого входа
-  const handleDemoLogin = async () => {
-    setLoginEmail("alexandra@company.com");
-    setLoginPassword("demo");
-    setIsLoading(true);
-    const success = await login("alexandra@company.com", "demo");
-    if (success) {
-      toast.success("Добро пожаловать!");
-      navigate("/dashboard");
-    }
-    setIsLoading(false);
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
@@ -149,17 +138,6 @@ export default function Auth() {
                   </Button>
                 </form>
 
-                <div className="mt-4 pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleDemoLogin}
-                    disabled={isLoading}
-                  >
-                    Демо-вход (alexandra@company.com)
-                  </Button>
-                </div>
               </TabsContent>
 
               {/* Register Tab */}
@@ -199,11 +177,11 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-role">Должность</Label>
+                    <Label htmlFor="register-department">Отдел</Label>
                     <Input
-                      id="register-role"
+                      id="register-department"
                       type="text"
-                      placeholder="Разработчик"
+                      placeholder="Разработка"
                       value={registerRole}
                       onChange={(e) => setRegisterRole(e.target.value)}
                       required
