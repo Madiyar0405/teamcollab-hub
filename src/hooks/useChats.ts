@@ -277,7 +277,7 @@ export function useChatMessages(chatId: string | null) {
         })
         .eq('id', chatId);
 
-      await fetchMessages();
+      // Сообщение появится через realtime subscription
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Ошибка отправки сообщения');
