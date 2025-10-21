@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+# TeamCollab Hub
 
-## Project info
+TeamCollab Hub is a collaborative workspace for planning events, managing tasks and coordinating teams. This repository now contains both the Vite/React front-end and a Spring Boot + PostgreSQL back-end so that the application can be run end‑to‑end locally.
 
-**URL**: https://lovable.dev/projects/f8073402-6c3a-4d03-ab25-56c87234a017
+## Project structure
 
-## How can I edit this code?
+```
+.
+├── backend/               # Spring Boot project (Maven)
+├── public/                # Static assets for the React front-end
+├── src/                   # Front-end source code
+├── docker-compose.yml     # Local PostgreSQL service
+└── README.md
+```
 
-There are several ways of editing your application.
+## Prerequisites
 
-**Use Lovable**
+- Node.js 18+
+- Java 17+
+- Maven 3.9+
+- Docker (optional, for running PostgreSQL via `docker-compose`)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f8073402-6c3a-4d03-ab25-56c87234a017) and start prompting.
+## Running the application locally
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Start PostgreSQL
 
-**Use your preferred IDE**
+The backend expects a PostgreSQL database. The easiest way to start one is with Docker:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+docker compose up -d
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+This launches a `postgres:15` container that listens on `localhost:5432` and creates a database named `teamcollab` with the credentials `teamcollab/teamcollab`.
 
-Follow these steps:
+> If you prefer to use an existing PostgreSQL instance, set the environment variables described in the [Configuration](#configuration) section instead of running Docker.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2. Start the Spring Boot back-end
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+cd backend
+mvn spring-boot:run
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+The API will be available at `http://localhost:8080/api` and provides endpoints for authentication, users, events, columns, tasks and chats. JWT-based authentication is enabled; after registering or logging in, include the `Authorization: Bearer <token>` header in subsequent requests.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Start the React front-end
+
+```bash
+cd ..
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Vite serves the front-end on `http://localhost:5173`. The front-end is already configured to call the back-end at `http://localhost:8080/api` and will automatically include the JWT token stored in `localStorage`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Configuration
 
-**Use GitHub Codespaces**
+The Spring Boot application reads the following environment variables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Variable | Description | Default |
+| --- | --- | --- |
+| `SPRING_DATASOURCE_URL` | JDBC URL for PostgreSQL | `jdbc:postgresql://localhost:5432/teamcollab` |
+| `SPRING_DATASOURCE_USERNAME` | Database username | `teamcollab` |
+| `SPRING_DATASOURCE_PASSWORD` | Database password | `teamcollab` |
+| `APP_SECURITY_JWT_SECRET` | Base64 encoded secret for JWT signing | Pre-configured development secret |
+| `APP_SECURITY_JWT_EXPIRATION` | Token lifetime in milliseconds | `86400000` (24 hours) |
 
-## What technologies are used for this project?
+Override them when running `mvn spring-boot:run`, e.g.:
 
-This project is built with:
+```bash
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/teamcollab \
+SPRING_DATASOURCE_USERNAME=myuser \
+SPRING_DATASOURCE_PASSWORD=mypassword \
+APP_SECURITY_JWT_SECRET=$(openssl rand -base64 64) \
+mvn spring-boot:run
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## API overview
 
-## How can I deploy this project?
+All endpoints are served under the `/api` prefix.
 
-Simply open [Lovable](https://lovable.dev/projects/f8073402-6c3a-4d03-ab25-56c87234a017) and click on Share -> Publish.
+- `POST /auth/register` – create a new user and receive a JWT
+- `POST /auth/login` – authenticate and receive a JWT
+- `GET /auth/me` – retrieve the currently authenticated user
+- `POST /auth/logout` – stateless logout endpoint
+- CRUD endpoints for `/users`, `/events`, `/columns`, `/tasks`
+- Chat management endpoints under `/chats` with nested `/messages`
 
-## Can I connect a custom domain to my Lovable project?
+Swagger/OpenAPI is not included yet, but the front-end services in `src/api/services` demonstrate how each route is consumed.
 
-Yes, you can!
+## Database schema
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Entities are managed with JPA/Hibernate. The most important tables are:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- `users` – stores profile data, hashed passwords and counters
+- `events` – top-level planning context
+- `columns` – Kanban columns within an event
+- `tasks` – tasks linked to an event/column, with priority, status and assignees
+- `chats`, `chat_participants`, `chat_messages` – simple team chat implementation
+
+Hibernate automatically creates and updates the schema (`spring.jpa.hibernate.ddl-auto=update`). For production you should replace this with explicit migrations (Flyway or Liquibase).
+
+## Development tips
+
+- The JWT token is persisted in `localStorage` under the `token` key; clearing browser storage will log you out.
+- CORS is configured to allow requests from `http://localhost:5173`. Adjust `SecurityConfig` if you host the front-end elsewhere.
+- Passwords are hashed with BCrypt; there is no password reset flow yet.
+
+## Testing
+
+The repository currently has no automated test suite. You can add unit and integration tests in the `backend/src/test/java` tree and front-end tests with Vitest or Jest as needed.
+
+## License
+
+This project does not include an explicit license. Please add one if you plan to distribute the application.
