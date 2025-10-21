@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/teamcollab}
+    username: ${SPRING_DATASOURCE_USERNAME:teamcollab}
+    password: ${SPRING_DATASOURCE_PASSWORD:teamcollab}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: true
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+app:
+  security:
+    jwt:
+      secret: ${APP_SECURITY_JWT_SECRET:ZGVmYXVsdHNlY3JldGZvclRvb2xraXQxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMw==}
+      expiration-ms: ${APP_SECURITY_JWT_EXPIRATION:86400000}
+
+logging:
+  level:
+    org.springframework.security: INFO
